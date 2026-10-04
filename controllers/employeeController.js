@@ -7,10 +7,6 @@ export const getMyDetails = async (req,res) => {
     try {
         const userId = req.id
 
-        if(isNaN(userId)){
-            return res.status(400).json({message:"User ID should be Integer."})
-        }
-
         const employeeDetails = await pool.query("SELECT name, email, role, department, designation, state FROM users WHERE id = $1",[userId])
 
         if(employeeDetails.rows.length === 0){

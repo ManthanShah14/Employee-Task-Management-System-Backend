@@ -26,7 +26,7 @@ export const createEmployee = async(req,res)=>{
 
 export const getAllEmployees = async (req,res) => {
     try {
-        const employees = await pool.query("SELECT id, name, email, role, department, designation FROM users WHER role = 'employee' AND state = 'active'")
+        const employees = await pool.query("SELECT id, name, email, role, department, designation FROM users WHERE role = 'employee' AND state = 'active'")
 
         if(employees.rows.length === 0){
             return res.status(404).json({message:"No Employees Found." , employees:employees.rows})

@@ -2,6 +2,7 @@ import dotenv from 'dotenv'
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../config/db.js'
+
 import { getServerError } from '../global.js';
 
 dotenv.config()
@@ -55,3 +56,59 @@ export const login = async(req,res)=>{
     }
 }
 
+export const changePassword = async (req,res) => {
+    try {
+       const userId = req.id
+
+        const {oldPassword, newPassword } = req.body;
+
+        if(!oldPassword || !newPassword){
+            return res.status(400).json({message:"Invalid Credentials."})
+        }
+
+        const user = await pool.query("SELECT password_hash FROM users WHERE id = $1 AND state = 'active'",[userId])
+
+        if(user.rows.length === 0){
+            return res.status(404).json({message:"User not found."})
+        }
+
+        const userData = user.rows[0]
+
+        const verifyRightPassword = await bcrypt.compare(oldPassword , userData.password_hash)
+
+        if(!verifyRightPassword){
+            return res.status(400).json({message:"Old password is incorrect , Please write correct password."})
+        }
+
+        if(oldPassword === newPassword){
+            return res.status(409).json({message:"New Password should be different."})
+        }
+
+        const saltRounds = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(newPassword , saltRounds)
+
+        const updated = await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, name, email, role, department, designation" , [hashedPassword , userId])
+
+        res.status(200).json({message:"Password Changed Successfully." , user:updated.rows[0]})
+
+    } catch (error) {
+        getServerError(error)
+        return res.status(500).json({message:"Server error"})
+    }
+}
+
+export const logout = async (req,res) => {
+    try {
+        const token = req.cookies.token
+       if(!token){
+        return res.status(409).json({message:"User is not logged In."})
+       }
+
+       res.clearCookie('token' , cookieOptions)
+       res.status(200).json({message:"User logged out successfully."})
+        
+    } catch (error) {
+        getServerError(error)
+        return res.status(500).json({message:"Server error"})
+    }
+}

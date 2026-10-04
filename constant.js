@@ -1,5 +1,7 @@
 export const authEndpoints = Object.freeze({
-    login:"/login"
+    login:"/login",
+    logout:"/logout",
+    changePassword:"/changePassword/:id"
 })
 
 export const adminEndpoints = Object.freeze({
