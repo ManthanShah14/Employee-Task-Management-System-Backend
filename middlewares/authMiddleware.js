@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
-import pool from '../config/db.js'
 
 dotenv.config()
 
@@ -21,8 +20,30 @@ export const isAdmin = async(req , res , next)=>{
         next()
         
     } catch (error) {
-        console.log(error);
+        getServerError(error)
+        return res.status(500).json({message:"Server error"})
+    }
+}
+
+export const isEmployee = async(req,res,next)=>{
+    try {
+         const token = req.cookies.token
+        if(!token){
+            return res.status(401).json({message:"unauthoried , token required"})
+        }
+
+        const decoded = jwt.verify(token , process.env.JWT_SECRET)
+        const role = decoded.role
+
+        if(role !== 'employee'){
+            return res.status(403).json({message:"Only Employee can access"})
+        }
         
-        res.status(500).json({error:error , message:"Server error"})
+        req.id = decoded.id
+        
+        next()
+    } catch (error) {
+         getServerError(error)
+        return res.status(500).json({message:"Server error"})
     }
 }
